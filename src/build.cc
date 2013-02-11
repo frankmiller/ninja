@@ -74,16 +74,48 @@ BuildStatus::BuildStatus(const BuildConfig& config)
     : config_(config),
       start_time_millis_(GetTimeMillis()),
       started_edges_(0), finished_edges_(0), total_edges_(0),
-      progress_status_format_(NULL),
+      progress_status_format_(),
       overall_rate_(), current_rate_(config.parallelism) {
 
   // Don't do anything fancy in verbose mode.
   if (config_.verbosity != BuildConfig::NORMAL)
     printer_.set_smart_terminal(false);
 
-  progress_status_format_ = getenv("NINJA_STATUS");
-  if (!progress_status_format_)
-    progress_status_format_ = "[%s/%t] ";
+  const char* progress_status_format = getenv("NINJA_STATUS");
+  if (!progress_status_format) {
+    progress_status_format_ = "[%s/%t] %B";
+  } else {
+    // Process the progress status once so ninja errors out before processing.
+    progress_status_format_ = progress_status_format;
+    FormatProgressStatus(progress_status_format_.c_str(), "N/A");
+    bool start = false;
+    bool stop = false;
+    for (const char* s = progress_status_format_.c_str(); *s != '\0'; ++s) {
+      if (*s == '%') {
+        ++s;
+        switch (*s) {
+        case 'B':
+          start = true;
+          break;
+
+        case 'b':
+          stop = true;
+          break;
+
+        default:
+          break;
+        }
+      }
+    }
+    if (start && stop) {
+      Fatal("can't use both '%%b' and '%%B' in $NINJA_STATUS");
+    }
+    if (!start && !stop) {
+      // This code is present for compatibility reason only.
+      progress_status_format_ += " %B";
+    }
+    print_on_edge_start_ = !stop;
+  }
 }
 
 void BuildStatus::PlanHasTotalEdges(int total) {
@@ -95,7 +127,8 @@ void BuildStatus::BuildEdgeStarted(Edge* edge) {
   running_edges_.insert(make_pair(edge, start_time));
   ++started_edges_;
 
-  PrintStatus(edge);
+  if (print_on_edge_start_)
+    PrintStatus(edge);
 }
 
 void BuildStatus::BuildEdgeFinished(Edge* edge,
@@ -114,7 +147,7 @@ void BuildStatus::BuildEdgeFinished(Edge* edge,
   if (config_.verbosity == BuildConfig::QUIET)
     return;
 
-  if (printer_.is_smart_terminal())
+  if (!print_on_edge_start_)
     PrintStatus(edge);
 
   // Print the command that is spewing before printing its output.
@@ -148,8 +181,9 @@ void BuildStatus::BuildFinished() {
 }
 
 string BuildStatus::FormatProgressStatus(
-    const char* progress_status_format) const {
+    const char* progress_status_format, const char* build_rule) const {
   string out;
+  out.reserve(256);
   char buf[32];
   int percent;
   for (const char* s = progress_status_format; *s != '\0'; ++s) {
@@ -217,6 +251,11 @@ string BuildStatus::FormatProgressStatus(
         out += buf;
         break;
       }
+        // Build rule
+      case 'B':
+      case 'b':
+        out += build_rule;
+        break;
 
       default:
         Fatal("unknown placeholder '%%%c' in $NINJA_STATUS", *s);
@@ -244,7 +283,8 @@ void BuildStatus::PrintStatus(Edge* edge) {
     overall_rate_.Restart();
     current_rate_.Restart();
   }
-  to_print = FormatProgressStatus(progress_status_format_) + to_print;
+  to_print = FormatProgressStatus(
+      progress_status_format_.c_str(), to_print.c_str());
 
   printer_.Print(to_print,
                  force_full_command ? LinePrinter::FULL : LinePrinter::ELIDE);

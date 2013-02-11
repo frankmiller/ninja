@@ -195,6 +195,8 @@ Ninja supports one environment variable to control its behavior:
 
 Several placeholders are available:
 
+`%B`: The build rule being started.
+`%b`: The build rule being completed.
 `%s`:: The number of started edges.
 `%t`:: The total number of edges that must be run to complete the build.
 `%p`:: The percentage of started edges.
@@ -207,9 +209,9 @@ specified by `-j` or its default)
 `%e`:: Elapsed time in seconds.  _(Available since Ninja 1.2.)_
 `%%`:: A plain `%` character.
 
-The default progress status is `"[%s/%t] "` (note the trailing space
-to separate from the build rule). Another example of possible progress status
-could be `"[%u/%r/%f] "`.
+The default progress status is `"[%s/%t] %B"` Another example of possible progress status
+could be `"[%u/%r/%f] %B"`. Only one of %B or %b may be provided. If neither is
+provided, %B is automatically added at the end of the status.
 
 Extra tools
 ~~~~~~~~~~~

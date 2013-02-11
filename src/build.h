@@ -201,7 +201,8 @@ struct BuildStatus {
   /// See the user manual for more information about the available
   /// placeholders.
   /// @param progress_status_format The format of the progress status.
-  string FormatProgressStatus(const char* progress_status_format) const;
+  string FormatProgressStatus(const char* progress_status_format,
+                              const char* build_rule) const;
 
  private:
   void PrintStatus(Edge* edge);
@@ -220,8 +221,11 @@ struct BuildStatus {
   /// Prints progress output.
   LinePrinter printer_;
 
+  /// Whether status is printed on edge start or edge completion.
+  bool print_on_edge_start_;
+
   /// The custom progress status format to use.
-  const char* progress_status_format_;
+  std::string progress_status_format_;
 
   template<size_t S>
   void snprinfRate(double rate, char(&buf)[S], const char* format) const {

@@ -1392,7 +1392,13 @@ TEST_F(BuildTest, DepsGccWithEmptyDepfileErrorsOut) {
 
 TEST_F(BuildTest, StatusFormatReplacePlaceholder) {
   EXPECT_EQ("[%/s0/t0/r0/u0/f0]",
-            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f]"));
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f]", "FOO"));
+
+  EXPECT_EQ("[%/s0/t0/r0/u0/f0] FOO",
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f] %b", "FOO"));
+
+  EXPECT_EQ("[%/s0/t0/r0/u0/f0] FOO",
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f] %B", "FOO"));
 }
 
 TEST_F(BuildTest, FailedDepsParse) {
