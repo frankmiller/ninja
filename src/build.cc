@@ -112,7 +112,7 @@ BuildStatus::BuildStatus(const BuildConfig& config)
     }
     if (!start && !stop) {
       // This code is present for compatibility reason only.
-      progress_status_format_ += " %B";
+      progress_status_format_ += "%B";
     }
     print_on_edge_start_ = !stop;
   }
