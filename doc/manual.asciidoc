@@ -195,8 +195,9 @@ Ninja supports one environment variable to control its behavior:
 
 Several placeholders are available:
 
-`%B`: The build rule being started.
-`%b`: The build rule being completed.
+`%B`:: The build rule being started.
+`%b`:: The build rule being completed.
+`%d`:: The duration of the completed edge or `---` for a starting edge.
 `%s`:: The number of started edges.
 `%t`:: The total number of edges that must be run to complete the build.
 `%p`:: The percentage of started edges.

@@ -202,10 +202,11 @@ struct BuildStatus {
   /// placeholders.
   /// @param progress_status_format The format of the progress status.
   string FormatProgressStatus(const char* progress_status_format,
-                              const char* build_rule) const;
+                              const char* build_rule,
+                              int durationInMillis) const;
 
  private:
-  void PrintStatus(Edge* edge);
+  void PrintStatus(Edge* edge, int durationInMillis);
 
   const BuildConfig& config_;
 

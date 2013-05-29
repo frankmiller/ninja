@@ -87,7 +87,7 @@ BuildStatus::BuildStatus(const BuildConfig& config)
   } else {
     // Process the progress status once so ninja errors out before processing.
     progress_status_format_ = progress_status_format;
-    FormatProgressStatus(progress_status_format_.c_str(), "N/A");
+    FormatProgressStatus(progress_status_format_.c_str(), "N/A", -1);
     bool start = false;
     bool stop = false;
     for (const char* s = progress_status_format_.c_str(); *s != '\0'; ++s) {
@@ -128,7 +128,7 @@ void BuildStatus::BuildEdgeStarted(Edge* edge) {
   ++started_edges_;
 
   if (print_on_edge_start_ || printer_.is_smart_terminal())
-    PrintStatus(edge);
+    PrintStatus(edge,-1);
 }
 
 void BuildStatus::BuildEdgeFinished(Edge* edge,
@@ -148,7 +148,7 @@ void BuildStatus::BuildEdgeFinished(Edge* edge,
     return;
 
   if (!print_on_edge_start_ || printer_.is_smart_terminal())
-    PrintStatus(edge);
+    PrintStatus(edge,*end_time-*start_time);
 
   // Print the command that is spewing before printing its output.
   if (!success)
@@ -181,7 +181,7 @@ void BuildStatus::BuildFinished() {
 }
 
 string BuildStatus::FormatProgressStatus(
-    const char* progress_status_format, const char* build_rule) const {
+    const char* progress_status_format, const char* build_rule, int durationInMillis) const {
   string out;
   out.reserve(256);
   char buf[32];
@@ -245,10 +245,24 @@ string BuildStatus::FormatProgressStatus(
         out += buf;
         break;
 
+        // Total elapsed time
       case 'e': {
         double elapsed = overall_rate_.Elapsed();
         snprintf(buf, sizeof(buf), "%.3f", elapsed);
         out += buf;
+        break;
+      }
+
+        // Duration
+      case 'd': {
+        if (0 < durationInMillis) {
+          double durationInSeconds = double(durationInMillis)/1000.0;
+          snprintf(buf, sizeof(buf), "%.3f", durationInSeconds);
+          out += buf;
+        }
+        else {
+          out += "---";
+        }
         break;
       }
         // Build rule
@@ -269,7 +283,7 @@ string BuildStatus::FormatProgressStatus(
   return out;
 }
 
-void BuildStatus::PrintStatus(Edge* edge) {
+void BuildStatus::PrintStatus(Edge* edge, int durationInMillis) {
   if (config_.verbosity == BuildConfig::QUIET)
     return;
 
@@ -284,7 +298,7 @@ void BuildStatus::PrintStatus(Edge* edge) {
     current_rate_.Restart();
   }
   to_print = FormatProgressStatus(
-      progress_status_format_.c_str(), to_print.c_str());
+      progress_status_format_.c_str(), to_print.c_str(), durationInMillis);
 
   printer_.Print(to_print,
                  force_full_command ? LinePrinter::FULL : LinePrinter::ELIDE);

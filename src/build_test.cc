@@ -1391,14 +1391,14 @@ TEST_F(BuildTest, DepsGccWithEmptyDepfileErrorsOut) {
 }
 
 TEST_F(BuildTest, StatusFormatReplacePlaceholder) {
-  EXPECT_EQ("[%/s0/t0/r0/u0/f0]",
-            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f]", "FOO"));
+  EXPECT_EQ("[%/s0/t0/r0/u0/f0/d---]",
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f/d%d]", "FOO", -1));
 
-  EXPECT_EQ("[%/s0/t0/r0/u0/f0] FOO",
-            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f] %b", "FOO"));
+  EXPECT_EQ("[%/s0/t0/r0/u0/f0/d0.170] FOO",
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f/d%d] %b", "FOO", 170));
 
-  EXPECT_EQ("[%/s0/t0/r0/u0/f0] FOO",
-            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f] %B", "FOO"));
+  EXPECT_EQ("[%/s0/t0/r0/u0/f0/d4.200] FOO",
+            status_.FormatProgressStatus("[%%/s%s/t%t/r%r/u%u/f%f/d%d] %B", "FOO", 4200));
 }
 
 TEST_F(BuildTest, FailedDepsParse) {
