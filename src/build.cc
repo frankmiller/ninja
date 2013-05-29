@@ -127,7 +127,7 @@ void BuildStatus::BuildEdgeStarted(Edge* edge) {
   running_edges_.insert(make_pair(edge, start_time));
   ++started_edges_;
 
-  if (print_on_edge_start_)
+  if (print_on_edge_start_ || printer_.is_smart_terminal())
     PrintStatus(edge);
 }
 
@@ -147,7 +147,7 @@ void BuildStatus::BuildEdgeFinished(Edge* edge,
   if (config_.verbosity == BuildConfig::QUIET)
     return;
 
-  if (!print_on_edge_start_)
+  if (!print_on_edge_start_ || printer_.is_smart_terminal())
     PrintStatus(edge);
 
   // Print the command that is spewing before printing its output.
