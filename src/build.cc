@@ -127,6 +127,11 @@ void BuildStatus::BuildEdgeStarted(Edge* edge) {
   running_edges_.insert(make_pair(edge, start_time));
   ++started_edges_;
 
+  if (finished_edges_ == 0) {
+    overall_rate_.Restart();
+    current_rate_.Restart();
+  }
+
   if (print_on_edge_start_ || printer_.is_smart_terminal())
     PrintStatus(edge,-1);
 }
@@ -293,10 +298,6 @@ void BuildStatus::PrintStatus(Edge* edge, int durationInMillis) {
   if (to_print.empty() || force_full_command)
     to_print = edge->GetBinding("command");
 
-  if (finished_edges_ == 0) {
-    overall_rate_.Restart();
-    current_rate_.Restart();
-  }
   to_print = FormatProgressStatus(
       progress_status_format_.c_str(), to_print.c_str(), durationInMillis);
 
